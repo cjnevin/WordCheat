@@ -23,6 +23,7 @@
 /* Begin PBXFileReference section */
 		839C24742117AD1800DA1CC7 /* Array+Combinations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Array+Combinations.swift"; sourceTree = "<group>"; };
 		839C24762117B13500DA1CC7 /* Debouncer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Debouncer.swift; sourceTree = "<group>"; };
+		839C24782117BDBF00DA1CC7 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		839C98242117885A002218E8 /* WordCheat.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WordCheat.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		839C98272117885A002218E8 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		839C98292117885A002218E8 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -50,6 +51,7 @@
 		839C981B2117885A002218E8 = {
 			isa = PBXGroup;
 			children = (
+				839C24782117BDBF00DA1CC7 /* README.md */,
 				839C98262117885A002218E8 /* WordCheat */,
 				839C98252117885A002218E8 /* Products */,
 			);
