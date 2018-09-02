@@ -1,21 +1,25 @@
 import UIKit
 
-class ViewController: UITableViewController {
+final class ViewController: UITableViewController {
     private let lookupQueue = DispatchQueue(label: "lookup")
     private lazy var lookupDebouncer = createDebouncer(queue: lookupQueue)
-    private let searchController = UISearchController(searchResultsController: nil)
-    private var dictionaries: [Lookup] = []
-    private var words: [(length: Int, words: [String])] = []
-    private let scopePrefixes = ["WWF", "TWL06", "SOWPODS"]
-    
-    override func viewDidLoad() {
-        super.viewDidLoad()
+    private lazy var searchController: UISearchController = {
+        let searchController = UISearchController(searchResultsController: nil)
         searchController.searchResultsUpdater = self
         searchController.obscuresBackgroundDuringPresentation = false
         searchController.searchBar.placeholder = "Enter Letters"
         searchController.searchBar.delegate = self
         searchController.searchBar.scopeButtonTitles = scopePrefixes
-        
+        return searchController
+    }()
+    private var dictionaries: [Lookup] = []
+    private var words: [(length: Int, words: [String])] = []
+    private let scopePrefixes = ["WWF", "TWL06", "SOWPODS"]
+    private let wildcard: Character = "?"
+    private let alphabet = Character.alphabet().map(String.init)
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
         navigationController?.navigationBar.prefersLargeTitles = true
         navigationItem.hidesSearchBarWhenScrolling = false
         navigationItem.searchController = searchController
@@ -38,7 +42,21 @@ class ViewController: UITableViewController {
         }
     }
 
-    fileprivate func filter(_ searchText: String, dictionary: Int) {
+    private func combinations(for searchText: String,
+                              in dictionary: Lookup) -> LazyCollection<[Combination]> {
+        guard let wildcardIndex = searchText.index(of: wildcard) else {
+            return dictionary.combinations(for: searchText)
+        }
+        let nextIndex = searchText.index(after: wildcardIndex)
+        return alphabet
+            .map { searchText.replacingCharacters(in: wildcardIndex..<nextIndex, with: $0) }
+            .map { combinations(for: $0, in: dictionary) }
+            .reduce([Combination](), +)
+            .sorted(by: { $0.0 > $1.0 })
+            .lazy
+    }
+    
+    fileprivate func filter(_ searchText: String, at index: Int) {
         if searchText.isEmpty || searchText.count < 2 {
             searchController.searchBar.scopeButtonTitles = scopePrefixes
             words = []
@@ -46,16 +64,23 @@ class ViewController: UITableViewController {
         } else {
             lookupDebouncer { [weak self] in
                 guard let `self` = self else { return }
-                let combinations = self.dictionaries[dictionary].combinations(for: searchText)
+                let combinations = self.combinations(for: searchText, in: self.dictionaries[index])
                 let results = combinations.reduce(0, { $0 + $1.words.count })
-                let prefixes = self.scopePrefixes.suffix(at: dictionary, count: results)
+                let prefixes = self.scopePrefixes.suffix(at: index, count: results)
                 DispatchQueue.main.async {
                     self.searchController.searchBar.scopeButtonTitles = prefixes
-                    self.words = combinations
+                    self.words = Array(combinations)
                     self.tableView.reloadData()
                 }
             }
         }
+    }
+}
+
+extension Character {
+    static func alphabet() -> [Character] {
+        let a = Unicode.Scalar("a").value, z = Unicode.Scalar("z").value
+        return (a...z).compactMap(Unicode.Scalar.init).map(Character.init)
     }
 }
 
@@ -90,13 +115,13 @@ extension ViewController {
 
 extension ViewController: UISearchBarDelegate {
     func searchBar(_ searchBar: UISearchBar, selectedScopeButtonIndexDidChange selectedScope: Int) {
-        filter(searchBar.text ?? "", dictionary: selectedScope)
+        filter(searchBar.text ?? "", at: selectedScope)
     }
 }
 
 extension ViewController: UISearchResultsUpdating {
     func updateSearchResults(for searchController: UISearchController) {
         let searchBar = searchController.searchBar
-        filter(searchBar.text ?? "", dictionary: searchBar.selectedScopeButtonIndex)
+        filter(searchBar.text ?? "", at: searchBar.selectedScopeButtonIndex)
     }
 }

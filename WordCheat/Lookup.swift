@@ -3,6 +3,7 @@ import Foundation
 typealias Anagrams = [String]
 typealias Words = [String: Anagrams]
 typealias FixedLetters = [Int: Character]
+typealias Combination = (length: Int, words: [String])
 
 func hashed(_ word: String) -> String {
     return String(word.sorted())
@@ -30,7 +31,7 @@ protocol Lookup {
 }
 
 extension Lookup {
-    func combinations(for word: String) -> [(length: Int, words: [String])] {
+    func combinations(for word: String) -> LazyCollection<[Combination]> {
         let characters = Array(word.lowercased())
         return (2...characters.count)
             .compactMap { (index) in
@@ -42,6 +43,7 @@ extension Lookup {
                 return combinations.isEmpty ? nil : (index, combinations)
             }
             .sorted(by: { $0.0 > $1.0 })
+            .lazy
     }
 }
 
